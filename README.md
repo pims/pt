@@ -1,0 +1,1 @@
+wrapping `https://github.com/sourcegraph/go-papertrail` in a cli command.
