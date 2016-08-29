@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/mitchellh/cli"
 	"github.com/sourcegraph/go-papertrail/papertrail"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -66,8 +67,8 @@ func (c *SearchCommand) Run(args []string) int {
 	minTimeAgo := 0 * time.Second
 	delay := 2 * time.Second
 
-	if minTimeAgo != 0 {
-		opt.MinTime = time.Now().In(time.UTC).Add(-1 * minTimeAgo)
+	if minTimeAgo == 0 {
+		opt.MinTime = time.Now().In(time.UTC).Add(-48 * time.Hour)
 	}
 
 	stopWhenEmpty := !follow && (minTimeAgo == 0)
@@ -106,7 +107,15 @@ func (c *SearchCommand) Run(args []string) int {
 					start = i
 					break
 				}
-				c.Ui.Output(strings.Join(parts[start:], "\t"))
+
+				re := regexp.MustCompile(`\[(.*?)\]`)
+				matches := re.FindAllString(e.Message, -1)
+
+				ts := ""
+				if len(matches) > 0 {
+					ts = matches[0]
+				}
+				c.Ui.Output(fmt.Sprintf("ts=%s %s", ts, strings.Join(parts[start:], "\t")))
 			} else {
 				c.Ui.Output(e.Message)
 			}
